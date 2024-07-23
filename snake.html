@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Snake Game</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #242424;
+        }
+
+        h1 {
+            color: #fff;
+        }
+
+        canvas {
+            border: 1px solid #333;
+            background-color: #fff;
+            border-radius: 5px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Snake Game</h1>
+    <canvas id="gameCanvas" width="700" height="700"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const context = canvas.getContext("2d");
+
+        const snakeColors = ['#a3e635','#bef264'];
+
+        const boxSize = 25;
+        const canvasSize = 700;
+        const snakeSpeed = 60;
+
+        let snake = [
+            { x: 0, y: 0 }
+        ];
+
+        let food = {
+            x: Math.floor(Math.random() * (canvasSize / boxSize)) * boxSize,
+            y: Math.floor(Math.random() * (canvasSize / boxSize)) * boxSize
+        };
+
+        let direction = "";
+        let paused = false;
+
+        document.addEventListener("keydown", handleKeyPress);
+
+        function handleKeyPress(event) {
+            const key = event.keyCode;
+            if (!paused) {
+                if (key === 37 && direction !== "right") {
+                    direction = "left";
+                } else if (key === 38 && direction !== "down") {
+                    direction = "up";
+                } else if (key === 39 && direction !== "left") {
+                    direction = "right";
+                } else if (key === 40 && direction !== "up") {
+                    direction = "down";
+                } else if (key === 32) {
+                    paused = !paused;
+                }
+            } else if (key === 32) {
+                paused = !paused;
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function drawSnake() {
+            snake.forEach((segment, index) => {
+                const color = snakeColors[index % snakeColors.length];
+                context.fillStyle = color;
+                context.fillRect(segment.x, segment.y, boxSize, boxSize);
+            });
+        }
+
+        function drawFood() {
+            context.fillStyle = "#FF0000";
+            context.fillRect(food.x, food.y, boxSize, boxSize);
+        }
+
+        function moveSnake() {
+            const head = {
+                x: snake[0].x,
+                y: snake[0].y
+            };
+
+            if (direction === "left") {
+                head.x -= boxSize;
+            } else if (direction === "up") {
+                head.y -= boxSize;
+            } else if (direction === "right") {
+                head.x += boxSize;
+            } else if (direction === "down") {
+                head.y += boxSize;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                food = {
+                    x: Math.floor(Math.random() * (canvasSize / boxSize)) * boxSize,
+                    y: Math.floor(Math.random() * (canvasSize / boxSize)) * boxSize
+                };
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+
+            if (
+                head.x < 0 ||
+                head.y < 0 ||
+                head.x >= canvasSize ||
+                head.y >= canvasSize ||
+                snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+            ) {
+                clearInterval(gameInterval);
+                alert("Game over!");
+            }
+        }
+
+        function draw() {
+            context.clearRect(0, 0, canvasSize, canvasSize);
+            drawSnake();
+            drawFood();
+            moveSnake();
+            checkCollision();
+        }
+
+        let gameInterval;
+        function gameLoop() {
+            if (!paused) {
+                draw();
+                gameInterval = setTimeout(gameLoop, snakeSpeed);
+            }
+        }
+
+        gameLoop();
+    </script>
+</body>
+
+</html>
